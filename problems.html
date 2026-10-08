@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Problems solved — Senthil Pitchappan V</title>
+<meta name="description" content="Engineering case studies by Senthil Pitchappan V: problem, constraints, approach and outcome from Zoho CPaaS work and open-source projects. Backend engineer at Zoho building CPaaS and distributed messaging systems: WhatsApp Business Platform, WebRTC calling, Kafka pipelines. Projects, case studies and contact.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F6F7F5; --paper-2:#EDF0EE; --ink:#15202B; --slate:#4F5D6B; --mute:#7C8894;
+  --accent:#1F6F8B; --accent-ink:#17576D; --accent-soft:#DCEBF0; --rule:#D8DEE3;
+  --bubble-in:#FFFFFF; --bubble-out:#DDF2E6; --tick:#3B8EA5;
+  --focus:#1F6F8B;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121A21; --paper-2:#182229; --ink:#EEF2F4; --slate:#B7C1CA; --mute:#7F8C97;
+    --accent:#6FB4CC; --accent-ink:#8FC8DC; --accent-soft:#1E3440; --rule:#2A3740;
+    --bubble-in:#1E2A33; --bubble-out:#1F3A33; --tick:#7FC6DA; --focus:#6FB4CC;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121A21; --paper-2:#182229; --ink:#EEF2F4; --slate:#B7C1CA; --mute:#7F8C97;
+  --accent:#6FB4CC; --accent-ink:#8FC8DC; --accent-soft:#1E3440; --rule:#2A3740;
+  --bubble-in:#1E2A33; --bubble-out:#1F3A33; --tick:#7FC6DA; --focus:#6FB4CC;
+}
+html{scroll-padding-top:calc(72px + env(safe-area-inset-top,0px)); scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{animation:none!important;transition:none!important} }
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-ink);text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{color:var(--accent)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:4px}
+h1,h2,h3,h4{font-family:var(--display);font-weight:600;line-height:1.1;margin:0;letter-spacing:-0.01em}
+h2{font-size:clamp(1.75rem,3.4vw,2.5rem);margin-bottom:.4em}
+h3{font-size:1.25rem;font-weight:600}
+p{margin:0 0 1em}
+.wrap{max-width:1080px;margin:0 auto;padding:0 clamp(18px,4vw,40px)}
+.prose{max-width:68ch}
+
+/* nav */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--paper) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--rule)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+.brand{font-family:var(--display);font-weight:700;font-size:1.05rem;color:var(--ink);text-decoration:none;letter-spacing:-0.01em}
+.nav ul{list-style:none;margin:0;padding:0;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.nav ul::-webkit-scrollbar{display:none}
+.nav li a{display:block;padding:8px 10px;border-radius:8px;font-size:.93rem;color:var(--slate);text-decoration:none;white-space:nowrap}
+.nav li a:hover,.nav li a[aria-current="true"]{color:var(--ink);background:var(--paper-2)}
+.theme{appearance:none;border:1px solid var(--rule);background:transparent;color:var(--slate);width:36px;height:36px;border-radius:999px;cursor:pointer;display:grid;place-items:center;flex:none}
+.theme:hover{color:var(--ink);border-color:var(--mute)}
+.theme svg{width:17px;height:17px}
+
+/* hero */
+.hero{padding:clamp(40px,7vw,88px) 0 clamp(36px,6vw,72px)}
+.hero .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,5vw,72px);align-items:start}
+.hero h1{font-size:clamp(2.3rem,5.4vw,4.2rem);font-weight:700;letter-spacing:-0.025em;margin-bottom:.45em}
+.hero .lede{font-size:clamp(1.05rem,1.6vw,1.25rem);color:var(--slate);max-width:52ch}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:10px;font-weight:500;text-decoration:none;font-size:.97rem;border:1px solid var(--rule);color:var(--ink);background:var(--paper)}
+.btn:hover{border-color:var(--mute);color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.primary:hover{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff}
+.btn svg{width:16px;height:16px}
+
+/* thread */
+.thread{background:var(--paper-2);border:1px solid var(--rule);border-radius:18px;padding:18px 16px 14px;min-height:300px;display:flex;flex-direction:column;gap:9px;position:relative}
+.thread .meta{font-size:.78rem;color:var(--mute);text-align:center;margin-bottom:4px}
+.msg{max-width:88%;padding:10px 13px;border-radius:14px;font-size:.95rem;line-height:1.45;position:relative;opacity:0;transform:translateY(6px)}
+.msg.in{align-self:flex-start;background:var(--bubble-in);border-bottom-left-radius:5px;box-shadow:0 1px 0 rgba(21,32,43,.05)}
+.msg.out{align-self:flex-end;background:var(--bubble-out);border-bottom-right-radius:5px}
+.msg .stamp{display:flex;justify-content:flex-end;align-items:center;gap:4px;font-size:.7rem;color:var(--mute);margin-top:3px;line-height:1}
+.msg .ticks{display:inline-flex;width:16px;height:10px;color:var(--mute)}
+.msg .ticks svg{width:16px;height:10px}
+.msg.read .ticks{color:var(--tick)}
+.msg.show{animation:pop .35s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes pop{to{opacity:1;transform:none}}
+.typing{align-self:flex-start;background:var(--bubble-in);border-radius:14px;border-bottom-left-radius:5px;padding:12px 14px;display:none;gap:4px}
+.typing.on{display:inline-flex}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--mute);animation:blink 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.thread .replay{position:absolute;right:12px;top:10px;appearance:none;border:0;background:transparent;color:var(--mute);font:inherit;font-size:.78rem;cursor:pointer;padding:4px 6px;border-radius:6px}
+.thread .replay:hover{color:var(--ink);background:var(--paper)}
+@media (prefers-reduced-motion: reduce){ .msg{opacity:1;transform:none} .typing{display:none!important} .thread .replay{display:none} }
+
+/* sections */
+section{padding:clamp(48px,7vw,96px) 0;border-top:1px solid var(--rule)}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:clamp(16px,4vw,56px);margin-bottom:clamp(28px,4vw,48px)}
+.sec-head p{color:var(--slate);margin:0;max-width:60ch}
+@media (max-width:820px){.sec-head{grid-template-columns:1fr}}
+
+/* experience */
+.job{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:clamp(16px,4vw,56px);padding:28px 0;border-top:1px solid var(--rule)}
+.job:first-of-type{border-top:0;padding-top:0}
+.job .when{color:var(--mute);font-size:.95rem;margin-top:4px}
+.job h3{margin-bottom:2px}
+.job .role{color:var(--slate);margin-bottom:14px}
+.job ul{margin:0;padding-left:1.1em;color:var(--ink)}
+.job li{margin-bottom:9px;padding-left:4px}
+.job li::marker{color:var(--accent)}
+@media (max-width:820px){.job{grid-template-columns:1fr;gap:8px}}
+
+/* case studies */
+.cases{display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+.case{border-bottom:1px solid var(--rule)}
+.case summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start;padding:22px 0}
+.case summary::-webkit-details-marker{display:none}
+.case summary .ttl{font-family:var(--display);font-weight:600;font-size:1.2rem;line-height:1.2}
+.case summary .where{color:var(--mute);font-size:.9rem;margin-top:5px}
+.case summary .chev{width:28px;height:28px;border-radius:50%;border:1px solid var(--rule);display:grid;place-items:center;color:var(--slate);transition:transform .25s;margin-top:2px}
+.case[open] summary .chev{transform:rotate(45deg);border-color:var(--accent);color:var(--accent)}
+.case summary:hover .ttl{color:var(--accent-ink)}
+.case .body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 32px;padding:0 0 28px;max-width:900px}
+.case .body > div{border-left:2px solid var(--accent-soft);padding-left:14px}
+.case .body h4{font-family:var(--body);font-size:.85rem;font-weight:600;color:var(--accent-ink);margin-bottom:6px}
+.case .body p{font-size:.97rem;color:var(--ink);margin:0}
+.case .body .outcome{border-left-color:var(--accent)}
+@media (max-width:680px){.case .body{grid-template-columns:1fr}}
+
+/* projects */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.card{border:1px solid var(--rule);border-radius:16px;padding:22px 22px 18px;background:var(--paper);display:flex;flex-direction:column;gap:10px}
+.card.feature{grid-column:1/-1;background:var(--paper-2)}
+.card .top{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.card h3{font-size:1.3rem}
+.card .year{color:var(--mute);font-size:.9rem;white-space:nowrap;margin-top:4px}
+.card .stack{color:var(--slate);font-size:.9rem}
+.card p{color:var(--ink);font-size:.97rem;margin:0}
+.card .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;border:1px solid var(--rule);font-size:.86rem;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--mute);color:var(--ink)}
+.chip.live{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
+.chip.live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.chip svg{width:13px;height:13px}
+.more{margin-top:26px}
+.more summary{cursor:pointer;color:var(--slate);list-style:none;display:inline-flex;align-items:center;gap:8px}
+.more summary::-webkit-details-marker{display:none}
+.more summary::after{content:"+";width:22px;height:22px;border:1px solid var(--rule);border-radius:50%;display:grid;place-items:center;font-size:1rem;line-height:1}
+.more[open] summary::after{content:"–"}
+.more ul{columns:2;column-gap:40px;margin:14px 0 0;padding-left:1.1em;color:var(--slate);font-size:.95rem}
+.more li{break-inside:avoid;margin-bottom:6px}
+@media (max-width:680px){.more ul{columns:1}}
+
+/* skills */
+.skills{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 40px}
+@media (max-width:760px){.skills{grid-template-columns:1fr}}
+.skills h3{font-family:var(--body);font-size:.95rem;color:var(--accent-ink);margin-bottom:6px;font-weight:600}
+.skills p{color:var(--ink);margin:0;font-size:.97rem}
+
+/* about */
+.about .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:clamp(16px,4vw,56px)}
+@media (max-width:820px){.about .wrap{grid-template-columns:1fr}}
+.about .facts{border-top:1px solid var(--rule);margin-top:6px}
+.about .facts div{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--rule);font-size:.95rem}
+.about .facts dt{color:var(--mute);margin:0}
+.about .facts dd{margin:0}
+
+/* contact */
+.contact h2{font-size:clamp(2rem,5vw,3.4rem);letter-spacing:-0.02em}
+.contact .big{font-family:var(--display);font-size:clamp(1.2rem,2.6vw,1.7rem);font-weight:600;text-decoration:none;color:var(--accent-ink);word-break:break-all}
+footer{padding:28px 0 40px;color:var(--mute);font-size:.88rem;border-top:1px solid var(--rule)}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.todo{display:block;margin-top:14px;padding:10px 12px;border:1.5px dashed var(--accent);border-radius:10px;background:var(--accent-soft);color:var(--accent-ink);font-size:.9rem}
+.todo b{font-weight:600}
+.diagram{grid-column:1/-1;border:1.5px dashed var(--rule);border-radius:12px;min-height:150px;display:grid;place-items:center;color:var(--mute);font-size:.9rem;text-align:center;padding:16px}
+.diagram img{max-width:100%;border-radius:8px}
+code{font-family:var(--mono);font-size:.9em;background:var(--paper-2);padding:1px 5px;border-radius:4px}
+
+@media (max-width:900px){
+  .hero .wrap{grid-template-columns:1fr}
+  .thread{order:2}
+}
+
+/* ---- mobile ---- */
+html,body{overflow-x:hidden;max-width:100%}
+.wrap{min-width:0}
+.nav .wrap{min-width:0}
+.nav nav{flex:1 1 auto;min-width:0;position:relative}
+.nav ul{-webkit-overflow-scrolling:touch;padding:0 2px;mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 28px),transparent);-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 28px),transparent)}
+.brand{white-space:nowrap;flex:none}
+@media (max-width:640px){
+  body{font-size:16px}
+  .nav .wrap{height:56px;gap:10px}
+  .nav li a{padding:10px 10px;font-size:.9rem}
+  .brand{font-size:1rem}
+  .hero{padding-top:30px;padding-bottom:30px}
+  .hero h1{font-size:2.15rem}
+  .hero .lede{font-size:1.02rem}
+  .links{gap:8px}
+  .btn{padding:12px 14px;min-height:44px}
+  .hero .links .btn.primary{flex:1 1 100%;justify-content:center}
+  .thread{min-height:260px;padding:14px 12px 12px;border-radius:16px}
+  .msg{max-width:92%;font-size:.93rem}
+  section{padding:40px 0}
+  h2{font-size:1.7rem}
+  .sec-head{margin-bottom:20px}
+  .job{padding:22px 0}
+  .job li{margin-bottom:8px}
+  .case summary{padding:18px 0;gap:12px}
+  .case summary .ttl{font-size:1.08rem}
+  .case summary .chev{width:34px;height:34px}
+  .case .body{gap:14px;padding-bottom:22px}
+  .card{padding:18px 16px 16px;border-radius:14px}
+  .card h3{font-size:1.15rem}
+  .chip{min-height:38px}
+  .skills{gap:18px}
+  .about .facts div{grid-template-columns:1fr;gap:2px}
+  .about .facts dt{font-size:.85rem}
+  .contact .big{font-size:1.15rem;word-break:break-word}
+  .contact .links .btn{flex:1 1 calc(50% - 4px);justify-content:center}
+  footer .wrap{flex-direction:column;gap:6px}
+  .diagram{min-height:120px;font-size:.86rem}
+  .todo{font-size:.86rem}
+}
+@media (max-width:380px){ .hero h1{font-size:1.95rem} .brand{font-size:.95rem} }
+
+/* nav: static on phones so it can never cover content; sticky only on wide screens */
+@media (max-width:820px){
+  .nav{position:static;background:var(--paper);backdrop-filter:none;-webkit-backdrop-filter:none}
+  html{scroll-padding-top:12px}
+}
+
+.brand{padding:10px 0;display:inline-flex;align-items:center;min-height:44px}
+
+.highlight{border:1px solid var(--accent);border-left:4px solid var(--accent);border-radius:14px;padding:20px 22px;background:var(--accent-soft);margin:0 0 22px}
+.highlight h4{font-family:var(--display);font-size:1.15rem;font-weight:600;margin:0 0 6px}
+.highlight p{margin:0;font-size:.97rem}
+.highlight .tag{display:inline-block;font-size:.8rem;font-weight:600;color:var(--accent-ink);margin-bottom:8px}
+.case.featured{border-left:3px solid var(--accent);padding-left:16px;margin-left:-19px;background:linear-gradient(90deg,var(--accent-soft),transparent 60%)}
+.case.featured summary .where::before{content:"Featured · ";color:var(--accent-ink);font-weight:600}
+@media (max-width:640px){ .case.featured{margin-left:-12px;padding-left:9px} }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html">Senthil Pitchappan V</a>
+    <nav aria-label="Sections">
+      <ul>
+        <li><a href="index.html#work">Work</a></li>
+        <li><a href="#top" aria-current="true">Problems solved</a></li>
+        <li><a href="index.html#projects">Projects</a></li>
+        <li><a href="index.html#about">About</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+        <li><a href="resume.pdf" download="Senthil_Pitchappan_V_Resume.pdf" target="_blank" rel="noopener">Resume</a></li>
+      </ul>
+    </nav>
+    <button class="theme" id="themeBtn" aria-label="Switch colour theme" title="Switch theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/><circle cx="12" cy="12" r="4.5"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero" style="border-top:0;padding-bottom:8px">
+  <div class="wrap" style="display:block">
+    <h1 style="font-size:clamp(2rem,4.6vw,3.4rem)">Problems solved</h1>
+    <p class="lede">Each case follows the same shape: what was wrong, what made it hard, what I chose, and what changed. The Zoho cases are features and modules I owned end to end as one of the core developers on a platform doing 2 million messages a day for 50,000+ customers across 10+ data centres; the open-source ones are from my own projects. Open any one.</p>
+  </div>
+</section>
+<section id="problems" style="border-top:0;padding-top:16px">
+  <div class="wrap">
+        <div class="cases">
+
+      <details class="case featured" id="arattai" open>
+        <summary>
+          <div><div class="ttl">A business messaging platform with no backend yet</div><div class="where">Zoho · Arattai Business Platform</div></div>
+          <span class="chev" aria-hidden="true">+</span>
+        </summary>
+        <div class="body">
+          <div><h4>Problem</h4><p>Arattai needed a business-facing platform: multi-tenant accounts, message workflows, and a way to meter and bill usage. None of it existed.</p></div>
+          <div><h4>Constraints</h4><p>Had to scale from zero to production volume without a rewrite, keep per-tenant isolation, and make credit accounting correct under concurrent sends and retries.</p></div>
+          <div><h4>Approach</h4><p>Designed and built the data model, microservice boundaries, message workflows and the credit management system end to end. Treated credits as a ledger with idempotent debits so retries never double-charge, and kept tenant identity on every event.</p></div>
+          <div class="outcome"><h4>Outcome</h4><p>Runs at millions of messages in production.</p></div>
+        </div>
+      </details>
+
+      <details class="case">
+        <summary>
+          <div><div class="ttl">Every new messaging channel was a new integration</div><div class="where">Zoho · CPaaS framework</div></div>
+          <span class="chev" aria-hidden="true">+</span>
+        </summary>
+        <div class="body">
+          <div><h4>Problem</h4><p>Each channel (WhatsApp, Arattai Business, Telegram, LINE, WeChat, Viber, Facebook Messenger and Instagram) arrived with its own payloads, delivery semantics, media handling and rate limits. Product teams had to learn each one, and onboarding a channel meant touching many services.</p></div>
+          <div><h4>Constraints</h4><p>Existing consumers could not break. Channel-specific features (templates, interactive messages, read receipts) still had to be reachable, not flattened away.</p></div>
+          <div><h4>Approach</h4><p>Designed a unified, omnichannel framework with one RESTful API surface and a per-channel adapter layer. Common concerns (identity, status tracking, retries, webhooks) live once in the core; channel quirks live in adapters behind a stable contract.</p></div>
+          <div class="outcome"><h4>Outcome</h4><p>Eight channels now sit behind one API. New channels follow a standard onboarding path, and internal products integrate once instead of per channel.</p></div>
+        </div>
+      </details>
+
+
+      <details class="case">
+        <summary>
+          <div><div class="ttl">Adding real-time voice to a messaging system</div><div class="where">Zoho · WhatsApp Business Calling</div></div>
+          <span class="chev" aria-hidden="true">+</span>
+        </summary>
+        <div class="body">
+          <div><h4>Problem</h4><p>Messaging is asynchronous and durable; calling is synchronous and latency-sensitive. WhatsApp Business Calling had to live inside the same product and the same conversation thread.</p></div>
+          <div><h4>Constraints</h4><p>WebRTC signalling, media negotiation and call state all had to be modelled alongside messages, and failures had to degrade gracefully rather than drop the conversation.</p></div>
+          <div><h4>Approach</h4><p>Designed the WebRTC-based infrastructure: call lifecycle and data model, signalling APIs, scaling plan, test strategy and production rollout. Calls appear inline in the thread next to messages.</p></div>
+          <div class="outcome"><h4>Outcome</h4><p>Real-time calling shipped as part of the messaging platform rather than as a separate product. I later rebuilt a version of this in the open in Nudgeway.</p></div>
+        </div>
+      </details>
+
+      <details class="case">
+        <summary>
+          <div><div class="ttl">Keeping p99 low when producers burst</div><div class="where">Zoho · bot microservice and Kafka pipelines</div></div>
+          <span class="chev" aria-hidden="true">+</span>
+        </summary>
+        <div class="body">
+          <div><h4>Problem</h4><p>Several internal Zoho products push bot traffic through one service that fans out to four bot frameworks (Zoho Zia Agent, Zoho Zia Bot, Zoho GC Bot and Google Dialogflow). Bursts from one tenant could starve others and push tail latency up.</p></div>
+          <div><h4>Constraints</h4><p>At-least-once delivery was required, so consumers had to be idempotent. Ordering mattered per conversation but not globally.</p></div>
+          <div><h4>Approach</h4><p>Event-driven, multi-threaded Kafka consumers with consumer-group scaling, partition-aware routing keyed so related messages stay ordered, explicit back-pressure, and Redis for de-duplication and short-lived state. Consumer lag, throughput and tail latency are exported to Prometheus and watched on Grafana dashboards, which is how bursts are caught before they show up as p99 regressions.</p></div>
+          <div class="outcome"><h4>Outcome</h4><p>Processes its share of the platform's 2 million messages a day at low p99 latency with high availability, fault-tolerant across tenants and 10+ data centres.</p></div>
+        </div>
+      </details>
+
+      <details class="case">
+        <summary>
+          <div><div class="ttl">Broadcasts capped at 25 messages per second</div><div class="where">Zoho · broadcast pipeline</div></div>
+          <span class="chev" aria-hidden="true">+</span>
+        </summary>
+        <div class="body">
+          <div><h4>Problem</h4><p>Customers sending campaigns to large audiences were throttled to 25 messages per second for the whole application. A broadcast to a big list took hours, and one tenant's campaign queued behind another's.</p></div>
+          <div><h4>Constraints</h4><p>Each channel enforces its own per-sender rate limits, so throughput had to scale per phone number, not just globally. Ordering per recipient, retries and delivery-status tracking had to keep working at the higher rate.</p></div>
+          <div><h4>Approach</h4><p>Reworked the broadcast path to partition work per sending number, with per-number rate limiters, parallel consumers and back-pressure into Kafka so the pipeline degrades to queueing rather than dropping.</p></div>
+          <div class="outcome"><h4>Outcome</h4><p>Application-level throughput went from 25 to 550 messages per second, and each phone number can sustain 500 messages per second on its own.</p></div>
+        </div>
+      </details>
+
+      <details class="case">
+        <summary>
+          <div><div class="ttl">Regressions that only showed up against real carriers</div><div class="where">Zoho · acceptance testing</div></div>
+          <span class="chev" aria-hidden="true">+</span>
+        </summary>
+        <div class="body">
+          <div><h4>Problem</h4><p>Unit tests passed, but behaviour depended on carrier and partner APIs that are slow, rate-limited and sometimes unavailable in test environments. Bugs surfaced in production.</p></div>
+          <div><h4>Constraints</h4><p>Tests had to run in CI without external credentials and still exercise real request and response shapes, including error paths.</p></div>
+          <div><h4>Approach</h4><p>Authored an end-to-end acceptance suite with JUnit and WireMock that mocks carrier and partner APIs with recorded contracts, covering happy paths, timeouts and malformed responses.</p></div>
+          <div class="outcome"><h4>Outcome</h4><p>Fewer production regressions and a contract that partner changes can be checked against.</p></div>
+        </div>
+      </details>
+
+      <details class="case">
+        <summary>
+          <div><div class="ttl">Media fetches that round-tripped to Meta on every view</div><div class="where">Nudgeway · open source</div></div>
+          <span class="chev" aria-hidden="true">+</span>
+        </summary>
+        <div class="body">
+          <div><h4>Problem</h4><p>WhatsApp media URLs are short-lived. Rendering an inbox that pulled from Meta on each request was slow and brittle.</p></div>
+          <div><h4>Constraints</h4><p>Single-binary Go monolith, local services only, attachments plus call recordings and transcripts in one store.</p></div>
+          <div><h4>Approach</h4><p>Download once on receipt and persist in HBase; MySQL stays the source of truth, Redis handles cache, locks and rate limits, Kafka carries a durable event log with per-conversation-ordered job queues.</p></div>
+          <div class="outcome"><h4>Outcome</h4><p>Durable media with no per-request Meta round-trip, and the same store serves calling features.</p></div>
+        </div>
+      </details>
+
+      <details class="case">
+        <summary>
+          <div><div class="ttl">Formatting a 20 MB JSON file without freezing the tab</div><div class="where">JSONForge · open source</div></div>
+          <span class="chev" aria-hidden="true">+</span>
+        </summary>
+        <div class="body">
+          <div><h4>Problem</h4><p>Browser JSON tools lock the UI thread on large payloads, and tree views with hundreds of thousands of nodes crash.</p></div>
+          <div><h4>Constraints</h4><p>Everything client-side; no upload to a server.</p></div>
+          <div><h4>Approach</h4><p>Parse in a Web Worker, render the tree with virtualisation, and cap the graph view at 500 nodes with a clear notice instead of attempting the impossible.</p></div>
+          <div class="outcome"><h4>Outcome</h4><p>Handles 5–20 MB payloads with the editor still responsive; schema generation, diff and graph views on top.</p></div>
+        </div>
+      </details>
+
+    </div>
+    <div class="links" style="margin-top:36px"><a class="btn" href="index.html">Back to home</a></div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Senthil Pitchappan V · Chennai</span>
+    <span>Hand-built, no framework. Last updated October 2026.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  // Theme
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  var sun='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/><circle cx="12" cy="12" r="4.5"/></svg>';
+  var moon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>';
+  function current(){ var t=root.getAttribute('data-theme'); if(t) return t; return matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'; }
+  function paint(){ btn.innerHTML=current()==='dark'?sun:moon; }
+  try{ var saved=localStorage.getItem('theme'); if(saved==='dark'||saved==='light') root.setAttribute('data-theme',saved); }catch(e){}
+  paint();
+  btn.addEventListener('click',function(){
+    var next=current()==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next); paint();
+    try{ localStorage.setItem('theme',next); }catch(e){}
+  });
+
+  // Message thread reveal
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var th=document.getElementById('thread'); var msgs=th?[].slice.call(th.querySelectorAll('.msg')):[];
+  var typing=document.getElementById('typing'), replay=document.getElementById('replay');
+  var timers=[];
+  function run(){
+    timers.forEach(clearTimeout); timers=[];
+    msgs.forEach(function(m){ m.classList.remove('show'); });
+    replay.hidden=true;
+    var total=0;
+    msgs.forEach(function(m,i){
+      var d=+m.getAttribute('data-delay'); total=d;
+      if(m.classList.contains('in')){
+        timers.push(setTimeout(function(){ typing.classList.add('on'); typing.parentNode.appendChild(typing); },Math.max(0,d-700)));
+      }
+      timers.push(setTimeout(function(){ typing.classList.remove('on'); m.classList.add('show'); },d));
+    });
+    timers.push(setTimeout(function(){ replay.hidden=false; },total+600));
+  }
+  if(reduce){ msgs.forEach(function(m){ m.classList.add('show'); }); }
+  else{
+    var started=false;
+    var io=new IntersectionObserver(function(es){ if(!started && es[0].isIntersecting){ started=true; run(); io.disconnect(); } },{threshold:.3});
+    if(th) io.observe(th);
+    if(replay) replay.addEventListener('click',run);
+  }
+
+  // Nav current section
+  var links=[].slice.call(document.querySelectorAll('.nav li a'));
+  var secs=links.map(function(a){ var h=a.getAttribute('href'); return h.charAt(0)==='#'?document.querySelector(h):null; });
+  var so=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ links.forEach(function(a){ a.removeAttribute('aria-current'); }); var a=links[secs.indexOf(e.target)]; if(a) a.setAttribute('aria-current','true'); } });
+  },{rootMargin:'-40% 0px -55% 0px'});
+  secs.forEach(function(s){ if(s) so.observe(s); });
+})();
+</script>
+</body>
+</html>
