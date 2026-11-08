@@ -314,19 +314,6 @@ html,body{overflow-x:hidden;max-width:100%}
 
       <details class="case">
         <summary>
-          <div><div class="ttl">Keeping p99 low when producers burst</div><div class="where">Zoho · bot microservice and Kafka pipelines</div></div>
-          <span class="chev" aria-hidden="true">+</span>
-        </summary>
-        <div class="body">
-          <div><h4>Problem</h4><p>Several internal Zoho products push bot traffic through one service that fans out to four bot frameworks (Zoho Zia Agent, Zoho Zia Bot, Zoho GC Bot and Google Dialogflow). Bursts from one tenant could starve others and push tail latency up.</p></div>
-          <div><h4>Constraints</h4><p>At-least-once delivery was required, so consumers had to be idempotent. Ordering mattered per conversation but not globally.</p></div>
-          <div><h4>Approach</h4><p>Event-driven, multi-threaded Kafka consumers with consumer-group scaling, partition-aware routing keyed so related messages stay ordered, explicit back-pressure, and Redis for de-duplication and short-lived state. Consumer lag, throughput and tail latency are exported to Prometheus and watched on Grafana dashboards, which is how bursts are caught before they show up as p99 regressions.</p></div>
-          <div class="outcome"><h4>Outcome</h4><p>Processes its share of the platform's 2 million messages a day at low p99 latency with high availability, fault-tolerant across tenants and 10+ data centres.</p></div>
-        </div>
-      </details>
-
-      <details class="case">
-        <summary>
           <div><div class="ttl">Broadcasts capped at 25 messages per second</div><div class="where">Zoho · broadcast pipeline</div></div>
           <span class="chev" aria-hidden="true">+</span>
         </summary>
@@ -348,32 +335,6 @@ html,body{overflow-x:hidden;max-width:100%}
           <div><h4>Constraints</h4><p>Tests had to run in CI without external credentials and still exercise real request and response shapes, including error paths.</p></div>
           <div><h4>Approach</h4><p>Authored an end-to-end acceptance suite with JUnit and WireMock that mocks carrier and partner APIs with recorded contracts, covering happy paths, timeouts and malformed responses.</p></div>
           <div class="outcome"><h4>Outcome</h4><p>Fewer production regressions and a contract that partner changes can be checked against.</p></div>
-        </div>
-      </details>
-
-      <details class="case">
-        <summary>
-          <div><div class="ttl">Media fetches that round-tripped to Meta on every view</div><div class="where">Nudgeway · open source</div></div>
-          <span class="chev" aria-hidden="true">+</span>
-        </summary>
-        <div class="body">
-          <div><h4>Problem</h4><p>WhatsApp media URLs are short-lived. Rendering an inbox that pulled from Meta on each request was slow and brittle.</p></div>
-          <div><h4>Constraints</h4><p>Single-binary Go monolith, local services only, attachments plus call recordings and transcripts in one store.</p></div>
-          <div><h4>Approach</h4><p>Download once on receipt and persist in HBase; MySQL stays the source of truth, Redis handles cache, locks and rate limits, Kafka carries a durable event log with per-conversation-ordered job queues.</p></div>
-          <div class="outcome"><h4>Outcome</h4><p>Durable media with no per-request Meta round-trip, and the same store serves calling features.</p></div>
-        </div>
-      </details>
-
-      <details class="case">
-        <summary>
-          <div><div class="ttl">Formatting a 20 MB JSON file without freezing the tab</div><div class="where">JSONForge · open source</div></div>
-          <span class="chev" aria-hidden="true">+</span>
-        </summary>
-        <div class="body">
-          <div><h4>Problem</h4><p>Browser JSON tools lock the UI thread on large payloads, and tree views with hundreds of thousands of nodes crash.</p></div>
-          <div><h4>Constraints</h4><p>Everything client-side; no upload to a server.</p></div>
-          <div><h4>Approach</h4><p>Parse in a Web Worker, render the tree with virtualisation, and cap the graph view at 500 nodes with a clear notice instead of attempting the impossible.</p></div>
-          <div class="outcome"><h4>Outcome</h4><p>Handles 5–20 MB payloads with the editor still responsive; schema generation, diff and graph views on top.</p></div>
         </div>
       </details>
 
